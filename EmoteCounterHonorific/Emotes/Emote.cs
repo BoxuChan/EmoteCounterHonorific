@@ -10,5 +10,5 @@ public enum Emote
     Dote = 1,
     Hug = 2,
     Heart = 3,
-    Petals = 4,
+    Petals = 4
 }

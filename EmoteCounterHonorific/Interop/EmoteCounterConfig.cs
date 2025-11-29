@@ -55,21 +55,21 @@ public class EmoteCounterConfig(IDalamudPluginInterface pluginInterface, IPlugin
     {
         var pluginConfigsDirectory = Path.GetFullPath(Path.Combine(PluginInterface.GetPluginConfigDirectory(), ".."));
         // %appdata%\xivlauncher\pluginConfigs\EmoteCounter.json
-        var EmoteCounterConfigPath = Path.Combine(pluginConfigsDirectory, "EmoteCounter.json");
-        if (!Path.Exists(EmoteCounterConfigPath))
+        var emoteCounterConfigPath = Path.Combine(pluginConfigsDirectory, "EmoteCounter.json");
+        if (!Path.Exists(emoteCounterConfigPath))
         {
-            PluginLog.Error($"EmoteCounter config not found at {EmoteCounterConfigPath}");
+            PluginLog.Error($"EmoteCounter config not found at {emoteCounterConfigPath}");
             parsed = null!;
             return false;
         }
 
-        using StreamReader EmoteCounterConfigFile = new(EmoteCounterConfigPath);
-        var EmoteCounterConfigJson = EmoteCounterConfigFile.ReadToEnd();
-        parsed = JsonConvert.DeserializeObject<JsonConfig>(EmoteCounterConfigJson)!;
+        using StreamReader EmoteCounterConfigFile = new(emoteCounterConfigPath);
+        var emoteCounterConfigJson = EmoteCounterConfigFile.ReadToEnd();
+        parsed = JsonConvert.DeserializeObject<JsonConfig>(emoteCounterConfigJson)!;
 
         if (parsed == null)
         {
-            PluginLog.Error($"Failed to parse EmoteCounter config at {EmoteCounterConfigPath}");
+            PluginLog.Error($"Failed to parse EmoteCounter config at {emoteCounterConfigPath}");
             return false;
         }
 

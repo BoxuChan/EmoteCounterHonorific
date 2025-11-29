@@ -60,7 +60,7 @@ public class Config : IPluginConfiguration
     [Obsolete("Add support for multiple emotes in version 2")]
     public Vector3? Glow { get; set; }
 
-    public void MaybeMigrate(EmoteCounterConfig EmoteCounterConfig)
+    public void MaybeMigrate(EmoteCounterConfig emoteCounterConfig)
     {
         if (Version < LATEST)
         {
@@ -109,7 +109,7 @@ public class Config : IPluginConfiguration
 
             if (Version < 3)
             {
-                if(EmoteCounterConfig.TryParse(out var parsed))
+                if(emoteCounterConfig.TryParse(out var parsed))
                 {
                     foreach (var emoteData in parsed.EmoteData)
                     {

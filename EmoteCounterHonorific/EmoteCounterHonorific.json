@@ -1,5 +1,5 @@
 {
-    "Author": "BoxuChan",
+    "Author": "Boxu",
     "Name": "EmoteCounterHonorific",
     "Punchline": "EmoteCounter Adaptation to Honorific - PatMeCounter",
     "Description": "EmoteCounter Adaptation to Honorific - PatMeCounter",
@@ -7,6 +7,7 @@
     "Tags": [
         "emote",
         "plugin",
-        "honorific"
+        "honorific",
+        "emotecounter"
     ]
 }

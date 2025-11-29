@@ -51,14 +51,14 @@ public sealed class Plugin : IDalamudPlugin
             ]
         };
 
-        var EmoteCounterConfig = new EmoteCounterConfig(PluginInterface, PluginLog);
-        Config.MaybeMigrate(EmoteCounterConfig);
+        var emoteCounterConfig = new EmoteCounterConfig(PluginInterface, PluginLog);
+        Config.MaybeMigrate(emoteCounterConfig);
 
         var setCharacterTitle = PluginInterface.GetIpcSubscriber<int, string, object>("Honorific.SetCharacterTitle");
         var clearCharacterTitle = PluginInterface.GetIpcSubscriber<int, object>("Honorific.ClearCharacterTitle");
 
         EmoteSheet = DataManager.GetExcelSheet<Emote>()!;
-        ConfigWindow = new(ClientState, Config, EmoteSheet, EmoteCounterConfig, PluginLog);
+        ConfigWindow = new(ClientState, Config, EmoteSheet, emoteCounterConfig, PluginLog);
         EmoteHook = new(PluginLog, GameInteropProvider);
 
         Updater = new(clearCharacterTitle, ClientState, Config, EmoteHook, Framework, ObjectTable, setCharacterTitle);
