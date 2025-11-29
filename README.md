@@ -1,15 +1,16 @@
-# PatMeHonorific
-
-## Installation
-
-Installable using my custom repository (instructions here: https://github.com/anya-hichu/DalamudPluginRepo) or from compiled archives.
+# EmoteCounterHonorific
 
 ## Commands
 
- - `/patmehonorific info`
- - `/patmehonorific config`
- - `/patmehonorific enable`
- - `/patmehonorific disable`
+ - `/emotecounterhonorific info`
+ - `/emotecounterhonorific config`
+ - `/emotecounterhonorific enable`
+ - `/ecounterhonorific disable`
+
+## Aliases
+ - `/emotecounterhonorific`
+ - `/echonorific`
+ - `/ech`
 
 ## Screenshots
 

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 
-namespace PatMeHonorific.Emotes;
+namespace EmoteCounterHonorific.Emotes;
 
 [Serializable]
 public class EmoteConfig

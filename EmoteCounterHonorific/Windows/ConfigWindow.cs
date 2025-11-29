@@ -6,16 +6,16 @@ using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
 using Dalamud.Utility;
 using Lumina.Excel;
-using PatMeHonorific.Emotes;
-using PatMeHonorific.Interop;
-using PatMeHonorific.Utils;
+using EmoteCounterHonorific.Emotes;
+using EmoteCounterHonorific.Interop;
+using EmoteCounterHonorific.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Emote = Lumina.Excel.Sheets.Emote;
 
-namespace PatMeHonorific.Windows;
+namespace EmoteCounterHonorific.Windows;
 
 public class ConfigWindow : Window
 {
@@ -25,10 +25,10 @@ public class ConfigWindow : Window
     private Config Config { get; init; }
     private Dictionary<ushort, HashSet<string>> CommandsByEmoteId { get; init; }
     private ImGuiHelper ImGuiHelper { get; init; } = new();
-    private PatMeConfig PatMeConfig { get; init; }
+    private EmoteCounterConfig EmoteCounterConfig { get; init; }
     private IPluginLog PluginLog { get; init; }
 
-    public ConfigWindow(IClientState clientState, Config config, ExcelSheet<Emote> emoteSheet, PatMeConfig patMeConfig, IPluginLog pluginLog) : base("PatMeHonorific - Config##configWindow")
+    public ConfigWindow(IClientState clientState, Config config, ExcelSheet<Emote> emoteSheet, EmoteCounterConfig EmoteCounterConfig, IPluginLog pluginLog) : base("EmoteCounterHonorific - Config##configWindow")
     {
         SizeConstraints = new()
         {
@@ -50,7 +50,7 @@ public class ConfigWindow : Window
             return commands;
         });
 
-        PatMeConfig = patMeConfig;
+        EmoteCounterConfig = EmoteCounterConfig;
         PluginLog = pluginLog;
     }
 
@@ -66,7 +66,7 @@ public class ConfigWindow : Window
         ImGui.SameLine(ImGui.GetWindowWidth() - 135);
         if (ImGui.Button("Sync###sync"))
         {
-            if(PatMeConfig.TrySync(Config))
+            if(EmoteCounterConfig.TrySync(Config))
             {
                 Config.Save();
                 PluginLog.Info("Successfully synced with patme");
@@ -78,7 +78,7 @@ public class ConfigWindow : Window
         }
         if (ImGui.IsItemHovered())
         {
-            ImGui.SetTooltip("Overrides internal counters with PatMe ones\nCounters can be displayed using: /patmehonorific info");
+            ImGui.SetTooltip("Overrides internal counters with PatMe ones\nCounters can be displayed using: /emotecounterhonorific info");
         }
 
         ImGui.SameLine();

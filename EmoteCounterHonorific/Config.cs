@@ -1,13 +1,13 @@
 using Dalamud.Configuration;
 using Newtonsoft.Json;
-using PatMeHonorific.Emotes;
-using PatMeHonorific.Interop;
+using EmoteCounterHonorific.Emotes;
+using EmoteCounterHonorific.Interop;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 
-namespace PatMeHonorific;
+namespace EmoteCounterHonorific;
 
 [Serializable]
 public class Config : IPluginConfiguration
@@ -60,7 +60,7 @@ public class Config : IPluginConfiguration
     [Obsolete("Add support for multiple emotes in version 2")]
     public Vector3? Glow { get; set; }
 
-    public void MaybeMigrate(PatMeConfig patMeConfig)
+    public void MaybeMigrate(EmoteCounterConfig EmoteCounterConfig)
     {
         if (Version < LATEST)
         {
@@ -109,7 +109,7 @@ public class Config : IPluginConfiguration
 
             if (Version < 3)
             {
-                if(patMeConfig.TryParse(out var parsed))
+                if(EmoteCounterConfig.TryParse(out var parsed))
                 {
                     foreach (var emoteData in parsed.EmoteData)
                     {

@@ -1,17 +1,17 @@
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Interface.Windowing;
-using PatMeHonorific.Windows;
+using EmoteCounterHonorific.Windows;
 using Dalamud.Plugin.Services;
-using PatMeHonorific.Interop;
-using PatMeHonorific.Emotes;
+using EmoteCounterHonorific.Interop;
+using EmoteCounterHonorific.Emotes;
 using Dalamud.Game.Command;
 using Emote = Lumina.Excel.Sheets.Emote;
 using Dalamud.Utility;
 using System.Linq;
 using Lumina.Excel;
 
-namespace PatMeHonorific;
+namespace EmoteCounterHonorific;
 
 public sealed class Plugin : IDalamudPlugin
 {
@@ -26,12 +26,12 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
     [PluginService] internal static IPluginLog PluginLog { get; private set; } = null!;
 
-    private const string CommandName = "/patmehonorific";
+    private const string CommandName = "/emotecounterhonorific";
     private const string CommandHelpMessage = $"Available subcommands for {CommandName} are info, config, enable and disable";
 
     public Config Config { get; init; }
 
-    public readonly WindowSystem WindowSystem = new("PatMeHonorific");
+    public readonly WindowSystem WindowSystem = new("EmoteCounterHonorific");
     private ConfigWindow ConfigWindow { get; init; }
 
     private EmoteHook EmoteHook { get; init; }
@@ -44,19 +44,21 @@ public sealed class Plugin : IDalamudPlugin
         {
             EmoteConfigs = [
                 new() { Name = "Receiving Pet", EmoteIds = [105], TitleTemplate = "Pet Counter {0}" },
-                new() { Name = "Receiving Dote", EmoteIds = [146], TitleTemplate = "Dote Counter {0}" },
-                new() { Name = "Receiving Hug",  EmoteIds = [112, 113], TitleTemplate = "Hug Counter {0}" }
+                new() { Name = "Receiving Dote", EmoteIds = [146, 147], TitleTemplate = "Dote Counter {0}" },
+                new() { Name = "Receiving Hug",  EmoteIds = [112, 113], TitleTemplate = "Hug Counter {0}" },
+                new() { Name = "Receiving Heart",  EmoteIds = [274], TitleTemplate = "Heart Counter {0}" },
+                new() { Name = "Receiving Petals",  EmoteIds = [211], TitleTemplate = "Petals Counter {0}" }
             ]
         };
 
-        var patMeConfig = new PatMeConfig(PluginInterface, PluginLog);
-        Config.MaybeMigrate(patMeConfig);
+        var EmoteCounterConfig = new EmoteCounterConfig(PluginInterface, PluginLog);
+        Config.MaybeMigrate(EmoteCounterConfig);
 
         var setCharacterTitle = PluginInterface.GetIpcSubscriber<int, string, object>("Honorific.SetCharacterTitle");
         var clearCharacterTitle = PluginInterface.GetIpcSubscriber<int, object>("Honorific.ClearCharacterTitle");
 
         EmoteSheet = DataManager.GetExcelSheet<Emote>()!;
-        ConfigWindow = new(ClientState, Config, EmoteSheet, patMeConfig, PluginLog);
+        ConfigWindow = new(ClientState, Config, EmoteSheet, EmoteCounterConfig, PluginLog);
         EmoteHook = new(PluginLog, GameInteropProvider);
 
         Updater = new(clearCharacterTitle, ClientState, Config, EmoteHook, Framework, ObjectTable, setCharacterTitle);

@@ -1,6 +1,6 @@
 using System;
 
-namespace PatMeHonorific.Emotes;
+namespace EmoteCounterHonorific.Emotes;
 
 public record EmoteCounterKey : IEquatable<EmoteCounterKey>
 {

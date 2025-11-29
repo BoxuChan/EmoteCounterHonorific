@@ -1,20 +1,22 @@
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using Newtonsoft.Json;
-using PatMeHonorific.Emotes;
+using EmoteCounterHonorific.Emotes;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace PatMeHonorific.Interop;
+namespace EmoteCounterHonorific.Interop;
 
-public class PatMeConfig(IDalamudPluginInterface pluginInterface, IPluginLog pluginLog)
+public class EmoteCounterConfig(IDalamudPluginInterface pluginInterface, IPluginLog pluginLog)
 {
     private static readonly Dictionary<string, HashSet<ushort>> EMOTE_NAME_TO_IDS = new()
     {
         { "Pet", [105] },
-        { "Dote", [146] },
+        { "Dote", [146, 147] },
         { "Hug", [112, 113] },
+        { "Heart", [274] },
+        { "Petals", [211] }
     };
 
     public class JsonConfig
@@ -52,22 +54,22 @@ public class PatMeConfig(IDalamudPluginInterface pluginInterface, IPluginLog plu
     public bool TryParse(out JsonConfig parsed)
     {
         var pluginConfigsDirectory = Path.GetFullPath(Path.Combine(PluginInterface.GetPluginConfigDirectory(), ".."));
-        // %appdata%\xivlauncher\pluginConfigs\PatMe.json
-        var patMeConfigPath = Path.Combine(pluginConfigsDirectory, "PatMe.json");
-        if (!Path.Exists(patMeConfigPath))
+        // %appdata%\xivlauncher\pluginConfigs\EmoteCounter.json
+        var EmoteCounterConfigPath = Path.Combine(pluginConfigsDirectory, "EmoteCounter.json");
+        if (!Path.Exists(EmoteCounterConfigPath))
         {
-            PluginLog.Error($"PatMe config not found at {patMeConfigPath}");
+            PluginLog.Error($"EmoteCounter config not found at {EmoteCounterConfigPath}");
             parsed = null!;
             return false;
         }
 
-        using StreamReader patMeConfigFile = new(patMeConfigPath);
-        var patMeConfigJson = patMeConfigFile.ReadToEnd();
-        parsed = JsonConvert.DeserializeObject<JsonConfig>(patMeConfigJson)!;
+        using StreamReader EmoteCounterConfigFile = new(EmoteCounterConfigPath);
+        var EmoteCounterConfigJson = EmoteCounterConfigFile.ReadToEnd();
+        parsed = JsonConvert.DeserializeObject<JsonConfig>(EmoteCounterConfigJson)!;
 
         if (parsed == null)
         {
-            PluginLog.Error($"Failed to parse PatMe config at {patMeConfigPath}");
+            PluginLog.Error($"Failed to parse EmoteCounter config at {EmoteCounterConfigPath}");
             return false;
         }
 

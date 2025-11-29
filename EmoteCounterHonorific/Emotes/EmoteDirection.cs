@@ -1,4 +1,4 @@
-namespace PatMeHonorific.Emotes;
+namespace EmoteCounterHonorific.Emotes;
 
 public enum EmoteDirection
 {

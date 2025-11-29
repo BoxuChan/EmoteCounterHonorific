@@ -2,12 +2,12 @@ using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Plugin.Ipc;
 using Dalamud.Plugin.Services;
 using Newtonsoft.Json;
-using PatMeHonorific.Emotes;
+using EmoteCounterHonorific.Emotes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace PatMeHonorific;
+namespace EmoteCounterHonorific;
 
 public class Updater : IDisposable
 {

@@ -2,7 +2,7 @@ using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility;
 using System.Numerics;
 
-namespace PatMeHonorific.Utils;
+namespace EmoteCounterHonorific.Utils;
 
 public class ImGuiHelper
 {
