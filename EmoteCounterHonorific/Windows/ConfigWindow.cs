@@ -25,7 +25,7 @@ public class ConfigWindow : Window
     private Config Config { get; init; }
     private Dictionary<ushort, HashSet<string>> CommandsByEmoteId { get; init; }
     private ImGuiHelper ImGuiHelper { get; init; } = new();
-    private EmoteCounterConfig emoteCounterConfig { get; init; }
+    private EmoteCounterConfig EmoteCounterConfig { get; init; }
     private IPluginLog PluginLog { get; init; }
 
     public ConfigWindow(IClientState clientState, Config config, ExcelSheet<Emote> emoteSheet, EmoteCounterConfig emoteCounterConfig, IPluginLog pluginLog) : base("EmoteCounterHonorific - Config##configWindow")
@@ -50,7 +50,7 @@ public class ConfigWindow : Window
             return commands;
         });
 
-        emoteCounterConfig = emoteCounterConfig;
+        EmoteCounterConfig = emoteCounterConfig;
         PluginLog = pluginLog;
     }
 
@@ -66,7 +66,7 @@ public class ConfigWindow : Window
         ImGui.SameLine(ImGui.GetWindowWidth() - 135);
         if (ImGui.Button("Sync###sync"))
         {
-            if(emoteCounterConfig.TrySync(Config))
+            if(EmoteCounterConfig.TrySync(Config))
             {
                 Config.Save();
                 PluginLog.Info("Successfully synced with patme");
@@ -78,7 +78,7 @@ public class ConfigWindow : Window
         }
         if (ImGui.IsItemHovered())
         {
-            ImGui.SetTooltip("Overrides internal counters with PatMe ones\nCounters can be displayed using: /emotecounterhonorific info");
+            ImGui.SetTooltip("Overrides internal counters with PatMe ones\nCounters can be displayed using: /patmehonorific info");
         }
 
         ImGui.SameLine();

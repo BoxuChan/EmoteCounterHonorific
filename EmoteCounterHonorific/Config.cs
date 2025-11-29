@@ -30,7 +30,9 @@ public class Config : IPluginConfiguration
         { 146, Emote.Dote },
         { 147, Emote.Dote },
         { 112, Emote.Hug },
-        { 113, Emote.Hug }
+        { 113, Emote.Hug },
+		{ 274, Emote.Heart },
+		{ 211, Emote.Petals }
     };
 
     [Obsolete("Configurable ids in config version 3")]
@@ -96,6 +98,22 @@ public class Config : IPluginConfiguration
                 {
                     Enabled = true,
                     TitleTemplate = "Hug Counter {0}",
+                    IsPrefix = IsPrefix,
+                    Color = Color,
+                    Glow = Glow
+                });
+				Emotes.Add(Emote.Heart, new()
+                {
+                    Enabled = true,
+                    TitleTemplate = "Heart Counter {0}",
+                    IsPrefix = IsPrefix,
+                    Color = Color,
+                    Glow = Glow
+                });
+				Emotes.Add(Emote.Petals, new()
+                {
+                    Enabled = true,
+                    TitleTemplate = "Petals Counter {0}",
                     IsPrefix = IsPrefix,
                     Color = Color,
                     Glow = Glow
