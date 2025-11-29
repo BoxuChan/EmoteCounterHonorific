@@ -26,8 +26,8 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
     [PluginService] internal static IPluginLog PluginLog { get; private set; } = null!;
 
-    private const string CommandName = "/emotecounterhonorific";
-    private const string CommandHelpMessage = $"Available subcommands for {CommandName} are info, config, enable and disable";
+    private static readonly string[] CommandNames = ["/emotecounterhonorific", "/ech", "/echonorific"];
+    private const string CommandHelpMessage = $"Available subcommands for /echonorific are info, config, enable and disable";
 
     public Config Config { get; init; }
 
@@ -63,10 +63,13 @@ public sealed class Plugin : IDalamudPlugin
 
         Updater = new(clearCharacterTitle, ClientState, Config, EmoteHook, Framework, ObjectTable, setCharacterTitle);
 
-        CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
+        foreach (var command in CommandNames)
         {
-            HelpMessage = CommandHelpMessage
-        });
+            CommandManager.AddHandler(command, new CommandInfo(OnCommand)
+            {
+                HelpMessage = CommandHelpMessage
+            });
+        }
 
         WindowSystem.AddWindow(ConfigWindow);
 
