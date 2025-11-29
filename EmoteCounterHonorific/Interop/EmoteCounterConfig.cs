@@ -15,8 +15,8 @@ public class EmoteCounterConfig(IDalamudPluginInterface pluginInterface, IPlugin
         { "Pet", [105] },
         { "Dote", [146, 147] },
         { "Hug", [112, 113] },
-        { "Heart", [274] },
-        { "Petals", [211] }
+        { "Love Heart", [274] },
+        { "Flower Shower", [211] }
     };
 
     public class JsonConfig
