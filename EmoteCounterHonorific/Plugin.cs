@@ -16,7 +16,7 @@ namespace EmoteCounterHonorific;
 public sealed class Plugin : IDalamudPlugin
 {
     [PluginService] internal static IChatGui ChatGui { get; private set; } = null!;
-    [PluginService] internal static IClientState ClientState { get; private set; } = null!;
+    [PluginService] internal static IPlayerState PlayerState { get; private set; } = null!;
     [PluginService] internal static ICommandManager CommandManager { get; private set; } = null!;
     [PluginService] internal static IDataManager DataManager { get; private set; } = null!;
     [PluginService] internal static IFramework Framework { get; private set; } = null!;
@@ -52,16 +52,15 @@ public sealed class Plugin : IDalamudPlugin
         };
 
         var emoteCounterConfig = new EmoteCounterConfig(PluginInterface, PluginLog);
-        Config.MaybeMigrate(emoteCounterConfig);
 
         var setCharacterTitle = PluginInterface.GetIpcSubscriber<int, string, object>("Honorific.SetCharacterTitle");
         var clearCharacterTitle = PluginInterface.GetIpcSubscriber<int, object>("Honorific.ClearCharacterTitle");
 
         EmoteSheet = DataManager.GetExcelSheet<Emote>()!;
-        ConfigWindow = new(ClientState, Config, EmoteSheet, emoteCounterConfig, PluginLog);
+        ConfigWindow = new(PlayerState, Config, EmoteSheet, emoteCounterConfig, PluginLog);
         EmoteHook = new(PluginLog, GameInteropProvider);
 
-        Updater = new(clearCharacterTitle, ClientState, Config, EmoteHook, Framework, ObjectTable, setCharacterTitle);
+        Updater = new(clearCharacterTitle, Config, EmoteHook, Framework, ObjectTable, PlayerState, setCharacterTitle);
 
         foreach (var command in CommandNames)
         {
@@ -116,7 +115,7 @@ public sealed class Plugin : IDalamudPlugin
     private void PrintCounters()
     {
         ChatGui.Print("Counters:");
-        foreach(var counter in Config.Counters.Where(c => c.Key.CharacterId == ClientState.LocalContentId))
+        foreach(var counter in Config.Counters.Where(c => c.Key.CharacterId == PlayerState.ContentId))
         {
             var key = counter.Key;
             ChatGui.Print($"     {EmoteSheet.GetRowAt(key.EmoteId).Name}: {counter.Value} ({key.Direction})");
