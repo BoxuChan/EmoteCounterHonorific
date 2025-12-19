@@ -5,18 +5,21 @@
     "Punchline": "EmoteCounter Adaptation to Honorific - PatMeCounter",
     "Description": "EmoteCounter Adaptation to Honorific - PatMeCounter",
     "InternalName": "EmoteCounterHonorific",
-    "AssemblyVersion": "0.0.3.4",
+    "AssemblyVersion": "0.0.4.0",
     "RepoUrl": "https://github.com/BoxuChan/EmoteCounterHonorific",
     "ApplicableVersion": "any",
-    "DalamudApiLevel": 13,
-    "TestingDalamudApiLevel": 13,
+    "DalamudApiLevel": 14,
+    "TestingDalamudApiLevel": 14,
     "IsHide": "False",
     "IsTestingExclusive": "False",
-    "DownloadLinkInstall": "https://github.com/BoxuChan/EmoteCounterHonorific/releases/download/0.0.3.4/EmoteCounterHonorific.zip",
-    "DownloadLinkUpdate": "https://github.com/BoxuChan/EmoteCounterHonorific/releases/download/0.0.3.4/EmoteCounterHonorific.zip",
+    "DownloadLinkInstall": "https://github.com/BoxuChan/EmoteCounterHonorific/releases/download/0.0.4.0/EmoteCounterHonorific.zip",
+    "DownloadLinkUpdate": "https://github.com/BoxuChan/EmoteCounterHonorific/releases/download/0.0.4.0/EmoteCounterHonorific.zip",
     "IconUrl": "https://raw.githubusercontent.com/BoxuChan/EmoteCounterHonorific/master/EmoteCounterHonorific/assets/icon.png",
     "Tags": [
-      "Boxu"
+        "Boxu",
+        "Honorific",
+        "Emote",
+        "Counter"
     ]
   }
 ]
