@@ -1,41 +1,49 @@
-name: Build
+name: Build and Release
 
 on:
-    push:
-        branches: [ "master" ]
-    pull_request:
-        branches: [ "master" ]
+  push:
+    branches: [ main, master ]
+    tags: [ '*' ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
 
 jobs:
-    Build:
-        runs-on: ubuntu-latest
-        env:
-            DALAMUD_HOME: /tmp/dalamud
-            DALAMUD_ARCHIVE_URL: ${{ vars.DALAMUD_ARCHIVE_URL || 'https://goatcorp.github.io/dalamud-distrib/latest.zip' }}
-        steps:
-            - name: Checkout Repository
-              uses: actions/checkout@v6
+  build:
+    runs-on: windows-latest
 
-            - name: Set up .NET
-              uses: actions/setup-dotnet@v5
-              with:
-                  dotnet-version: 9.0.x
+    steps:
+      - uses: actions/checkout@v4
 
-            - name: Download Dalamud Latest
-              run: |
-                  wget ${{ env.DALAMUD_ARCHIVE_URL }} -O ${{ env.DALAMUD_HOME }}.zip
-                  unzip ${{ env.DALAMUD_HOME }}.zip -d ${{ env.DALAMUD_HOME }}
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
 
-            - name: Restore Project
-              run: dotnet restore
+      - name: Setup Dalamud
+        run: |
+          Invoke-WebRequest -Uri https://goatcorp.github.io/dalamud-distrib/latest.zip -OutFile latest.zip
+          Expand-Archive -Force latest.zip "$env:AppData\XIVLauncher\addon\Hooks\dev\"
 
-            - name: Build Project
-              run: dotnet build --configuration Release EmoteCounterHonorific/EmoteCounterHonorific.csproj
+      - name: Restore dependencies
+        run: dotnet restore EmoteCounterHonorific\EmoteCounterHonorific.sln 
 
-            - name: Upload Artifacts
-              uses: actions/upload-artifact@v6
-              with:
-                  name: EmoteCounterHonorific
-                  path: |
-                      EmoteCounterHonorific/bin/Release/*
-                      !EmoteCounterHonorific/bin/Release/EmoteCounterHonorific/*
+      - name: Build
+        run: dotnet build $Env:GITHUB_WORKSPACE\EmoteCounterHonorific\EmoteCounterHonorific.sln /p:Configuration=Release /p:DefineConstants=XL_NOAUTOUPDATE
+
+      - name: Create Package Directory
+        run: mkdir -Path .\EmoteCounterHonorific\bin\Package\ -ErrorAction:Continue
+
+      - name: Package
+        uses: vimtor/action-zip@v1
+        with:
+          files: EmoteCounterHonorific\bin\x64\Release\EmoteCounterHonorific.dll EmoteCounterHonorific\bin\x64\Release\EmoteCounterHonorific.json EmoteCounterHonorific\bin\x64\Release\EmoteCounterHonorific.pdb
+          dest: EmoteCounterHonorific\bin\Package\EmoteCounterHonorific.zip
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') 
+        with:
+          files: EmoteCounterHonorific\bin\Package\EmoteCounterHonorific.zip
+          name: Release ${{ github.ref_name }}
+          generate_release_notes: true
