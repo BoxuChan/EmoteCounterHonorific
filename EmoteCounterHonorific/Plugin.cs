@@ -7,9 +7,9 @@ using EmoteCounterHonorific.Interop;
 using EmoteCounterHonorific.Emotes;
 using Dalamud.Game.Command;
 using Emote = Lumina.Excel.Sheets.Emote;
-using Dalamud.Utility;
 using System.Linq;
 using Lumina.Excel;
+using EmoteCounterHonorific.Configs;
 
 namespace EmoteCounterHonorific;
 
@@ -43,24 +43,28 @@ public sealed class Plugin : IDalamudPlugin
         Config = PluginInterface.GetPluginConfig() as Config ?? new Config()
         {
             EmoteConfigs = [
-                new() { Name = "Receiving Pet", EmoteIds = [105], TitleTemplate = "Pet Counter {0}" },
-                new() { Name = "Receiving Dote", EmoteIds = [146, 147], TitleTemplate = "Dote Counter {0}" },
-                new() { Name = "Receiving Hug",  EmoteIds = [112, 113], TitleTemplate = "Hug Counter {0}" },
-                new() { Name = "Receiving Heart",  EmoteIds = [274], TitleTemplate = "Heart Counter {0}" },
-                new() { Name = "Receiving Petals",  EmoteIds = [211], TitleTemplate = "Petals Counter {0}" }
+                new() { Name = "Receiving Pet", EmoteIds = [105], TitleTemplate = "Pet Counter {{ total_count }}" },
+                new() { Name = "Receiving Dote", EmoteIds = [146, 147], TitleTemplate = "Dote Counter {{ total_count }}" },
+                new() { Name = "Receiving Hug",  EmoteIds = [112, 113], TitleTemplate = "Hug Counter {{ total_count }}" },
+                new() { Name = "Receiving Heart",  EmoteIds = [274], TitleTemplate = "Heart Counter {{ total_count }}" },
+                new() { Name = "Receiving Petals",  EmoteIds = [211], TitleTemplate = "Petals Counter {{ total_count }}" }
             ]
         };
 
-        var emoteCounterConfig = new EmoteCounterConfig(PluginInterface, PluginLog);
+        #region Deprecated
+        new ConfigMigrator(PluginInterface).MaybeMigrate(Config);
+        #endregion
+
+        var emoteCounterSynchronizer = new EmoteCounterSynchronizer(PluginInterface, PluginLog);
 
         var setCharacterTitle = PluginInterface.GetIpcSubscriber<int, string, object>("Honorific.SetCharacterTitle");
         var clearCharacterTitle = PluginInterface.GetIpcSubscriber<int, object>("Honorific.ClearCharacterTitle");
 
         EmoteSheet = DataManager.GetExcelSheet<Emote>()!;
-        ConfigWindow = new(PlayerState, Config, EmoteSheet, emoteCounterConfig, PluginLog);
+        ConfigWindow = new(Config, EmoteSheet, emoteCounterSynchronizer, PlayerState, PluginInterface, PluginLog);
         EmoteHook = new(PluginLog, GameInteropProvider);
 
-        Updater = new(clearCharacterTitle, Config, EmoteHook, Framework, ObjectTable, PlayerState, setCharacterTitle);
+        Updater = new(clearCharacterTitle, Config, EmoteHook, Framework, ObjectTable, PlayerState, PluginLog, PluginInterface, setCharacterTitle);
 
         foreach (var command in CommandNames)
         {
@@ -88,12 +92,12 @@ public sealed class Plugin : IDalamudPlugin
         else if (subcommand == "enable")
         {
             Config.Enabled = true;
-            Config.Save();
+            SaveConfig();
         }
         else if (subcommand == "disable")
         {
             Config.Enabled = false;
-            Config.Save();
+            SaveConfig();
         }
         else if (subcommand == "info")
         {
@@ -125,4 +129,6 @@ public sealed class Plugin : IDalamudPlugin
     private void DrawUI() => WindowSystem.Draw();
 
     public void ToggleConfigUI() => ConfigWindow.Toggle();
+
+    private void SaveConfig() => PluginInterface.SavePluginConfig(Config);
 }

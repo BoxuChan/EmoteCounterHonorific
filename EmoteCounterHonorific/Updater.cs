@@ -1,34 +1,47 @@
 using Dalamud.Game.ClientState.Objects.SubKinds;
+using Dalamud.Plugin;
 using Dalamud.Plugin.Ipc;
 using Dalamud.Plugin.Services;
 using Newtonsoft.Json;
+using EmoteCounterHonorific.Configs;
 using EmoteCounterHonorific.Emotes;
+using EmoteCounterHonorific.Interop;
+using EmoteCounterHonorific.Updaters;
+using Scriban;
 using System;
-using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace EmoteCounterHonorific;
 
 public class Updater : IDisposable
 {
-    private IPlayerState PlayerState { get; init; }
     private Config Config { get; init; }
     private EmoteHook EmoteHook { get; init; }
     private IFramework Framework { get; init; }
     private IObjectTable ObjectTable { get; init; }
+    private IPlayerState PlayerState { get; init; }
+    private IDalamudPluginInterface PluginInterface { get; init; }
+    private IPluginLog PluginLog { get; init; }
 
     private ICallGateSubscriber<int, string, object> SetCharacterTitle { get; init; }
     private ICallGateSubscriber<int, object> ClearCharacterTitle { get; init; }
 
-    private DateTime? LastTitleUpdateAt { get; set; }
+    private EmoteCounters<uint> SessionCounters { get; init; } = [];
+    private EmoteCounters<EmoteComboCounter> ComboCounters { get; init; } = [];
 
-    public Updater(ICallGateSubscriber<int, object> clearCharacterTitle, Config config, EmoteHook emoteHook, IFramework framework, IObjectTable objectTable, IPlayerState playerState, ICallGateSubscriber<int, string, object> setCharacterTitle) {
+    private DateTime? LastUpdateAt { get; set; }
+
+    public Updater(ICallGateSubscriber<int, object> clearCharacterTitle, Config config, EmoteHook emoteHook, IFramework framework, IObjectTable objectTable, IPlayerState playerState, IPluginLog pluginLog, IDalamudPluginInterface pluginInterface, ICallGateSubscriber<int, string, object> setCharacterTitle)
+    {
         ClearCharacterTitle = clearCharacterTitle;
-        PlayerState = playerState;
         Config = config;
         EmoteHook = emoteHook;
         Framework = framework;
         ObjectTable = objectTable;
+        PlayerState = playerState;
+        PluginInterface = pluginInterface;
+        PluginLog = pluginLog;
         SetCharacterTitle = setCharacterTitle;
 
         Framework.Update += OnFrameworkUpdate;
@@ -41,8 +54,13 @@ public class Updater : IDisposable
         Framework.Update -= OnFrameworkUpdate;
     }
 
-    private bool TryUpdateCounter(ulong instigatorAddr, ushort emoteId, ulong targetId, out EmoteConfig? emoteConfig, out uint totalCounter)
+    private bool TryUpdateCounters(ulong instigatorAddr, ushort emoteId, ulong targetId, [NotNullWhen(true)] out EmoteConfig? emoteConfig, out uint totalCount, out uint sessionCount, [NotNullWhen(true)] out EmoteComboCounter? comboCounter)
     {
+        emoteConfig = null;
+        totalCount = default;
+        sessionCount = default;
+        comboCounter = null;
+
         var localPlayer = ObjectTable.LocalPlayer;
         if (localPlayer != null && ObjectTable.FirstOrDefault(x => (ulong)x.Address == instigatorAddr) is IPlayerCharacter instigator && instigator.GameObjectId != targetId)
         {
@@ -50,7 +68,7 @@ public class Updater : IDisposable
             if (targetId == localPlayer.GameObjectId)
             {
                 maybeDirection = EmoteDirection.Receiving;
-            } 
+            }
             else if (instigator.GameObjectId == localPlayer.GameObjectId)
             {
                 maybeDirection = EmoteDirection.Giving;
@@ -64,59 +82,88 @@ public class Updater : IDisposable
                 emoteConfig = Config.EmoteConfigs.OrderByDescending(c => c.Priority).FirstOrDefault(c => c.Enabled && c.EmoteIds.Contains(emoteId) && c.Direction == direction && (c.CharacterIds.Count == 0 || c.CharacterIds.Contains(PlayerState.ContentId)));
                 if (emoteConfig != null)
                 {
-                    totalCounter = 0;
-                    foreach (var configEmoteId in emoteConfig.EmoteIds) {
+                    var cumulativeComboCounter = new EmoteComboCounter();
+                    foreach (var configEmoteId in emoteConfig.EmoteIds)
+                    {
                         var key = new EmoteCounterKey() { CharacterId = characterId, Direction = direction, EmoteId = configEmoteId };
+
                         Config.Counters.TryAdd(key, 0);
+                        SessionCounters.TryAdd(key, 0);
+                        ComboCounters.TryAdd(key, new());
                         if (configEmoteId == emoteId)
                         {
-                            Config.Counters[key] += 1;
-                            Config.Save();
+                            Config.Counters[key]++;
+                            PluginInterface.SavePluginConfig(Config);
+
+                            SessionCounters[key]++;
+                            ComboCounters[key].Increment();
                         }
-                        totalCounter += Config.Counters[key];
+
+                        totalCount += Config.Counters[key];
+                        sessionCount += SessionCounters[key];
+                        cumulativeComboCounter.Add(ComboCounters[key]);
                     }
+
+                    comboCounter = cumulativeComboCounter;
                     return true;
                 }
             }
         }
-        emoteConfig = default;
-        totalCounter = default;
+
         return false;
     }
 
-    public void OnEmote(ulong instigatorAddr, ushort emoteId, ulong targetId)
+    private void OnEmote(ulong instigatorAddr, ushort emoteId, ulong targetId)
     {
-        if (Config.Enabled)
+        if (Config.Enabled && TryUpdateCounters(instigatorAddr, emoteId, targetId, out var emoteConfig, out var totalCount, out var sessionCount, out var recentCounter) && emoteConfig != null && emoteConfig.TitleDataConfig != null)
         {
-            if (TryUpdateCounter(instigatorAddr, emoteId, targetId, out var emoteConfig, out var totalCounter))
+            var parsedTemplate = Template.Parse(emoteConfig.TitleTemplate);
+
+            if (parsedTemplate.HasErrors)
             {
-                if (emoteConfig != null)
+                PluginLog.Error($"Failed to parse scriban title template ({parsedTemplate.Messages})");
+                return;
+            }
+
+            try
+            {
+                var title = parsedTemplate.Render(new UpdaterModel()
                 {
-                    var titleData = new Dictionary<string, object>()
-                    {
-                        { "Title", string.Format(emoteConfig.TitleTemplate, totalCounter) },
-                        { "IsPrefix", emoteConfig.IsPrefix },
-                        { "Color", emoteConfig.Color! },
-                        { "Glow", emoteConfig.Glow! }
-                    };
-                    var title = JsonConvert.SerializeObject(titleData);
-                    SetCharacterTitle.InvokeAction(0, title);
-                    LastTitleUpdateAt = DateTime.Now;
-                }  
-            }   
+                    TotalCount = totalCount,
+                    SessionCount = sessionCount,
+                    ComboCount = recentCounter.Get()
+                });
+
+                if (title.Length > Constraint.MaxTitleLength)
+                {
+                    PluginLog.Error($"Rendered title [{title}] is above limit of {Constraint.MaxTitleLength} characters, ignoring");
+                    return;
+                }
+
+                var titleData = emoteConfig.TitleDataConfig.ToTitleData(title, Config.IsHonorificSupporter);
+
+                var serializedData = JsonConvert.SerializeObject(titleData, Formatting.Indented);
+                if (serializedData == null) return;
+
+                PluginLog.Debug($"Call Honorific SetCharacterTitle IPC with:\n{serializedData}");
+
+                SetCharacterTitle.InvokeAction(0, serializedData);
+                LastUpdateAt = DateTime.Now;
+            }
+            catch (Exception e)
+            {
+                PluginLog.Error($"Failed to update honorific title ({e.Message})");
+            }
         }
     }
 
-    public void OnFrameworkUpdate(IFramework framework)
+    private void OnFrameworkUpdate(IFramework framework)
     {
-        if (LastTitleUpdateAt.HasValue)
+        if (LastUpdateAt.HasValue && DateTimeOffset.UtcNow.Subtract(LastUpdateAt.Value) > TimeSpan.FromMilliseconds(Config.AutoClearDelayMs))
         {
-            var delta = DateTime.Now - LastTitleUpdateAt.Value;
-            if (delta.TotalSeconds > Config.AutoClearTitleInterval)
-            {
-                ClearCharacterTitle.InvokeAction(0);
-                LastTitleUpdateAt = null;
-            }
+            PluginLog.Debug($"Call Honorific ClearCharacterTitle IPC after delay");
+            ClearCharacterTitle.InvokeAction(0);
+            LastUpdateAt = null;
         }
     }
 }

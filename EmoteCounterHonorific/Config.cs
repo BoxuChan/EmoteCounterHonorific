@@ -1,4 +1,5 @@
 using Dalamud.Configuration;
+using EmoteCounterHonorific.Configs;
 using EmoteCounterHonorific.Emotes;
 using System;
 using System.Collections.Generic;
@@ -8,7 +9,7 @@ namespace EmoteCounterHonorific;
 [Serializable]
 public class Config : IPluginConfiguration
 {
-    public static readonly int LATEST = 3;
+    public static readonly int LATEST = 4;
 
     public int Version { get; set; } = LATEST;
 
@@ -16,9 +17,14 @@ public class Config : IPluginConfiguration
 
     public List<EmoteConfig> EmoteConfigs { get; init; } = [];
 
-    public EmoteCounters Counters { get; set; } = [];
+    public EmoteCounters<uint> Counters { get; set; } = [];
 
+    [Obsolete("Changed to AutoClearDelayMs in version 4")]
     public int AutoClearTitleInterval { get; set; } = 5; // seconds
+
+    public ushort AutoClearDelayMs { get; set; } = 5000;
+
+    public bool IsHonorificSupporter { get; set; } = false;
 
     public void Save() => Plugin.PluginInterface.SavePluginConfig(this);
 }
